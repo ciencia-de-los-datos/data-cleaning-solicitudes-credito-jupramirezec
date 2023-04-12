@@ -9,17 +9,27 @@ correctamente. Tenga en cuenta datos faltantes y duplicados.
 import pandas as pd
 def clean_data():
 
-    df = pd.read_csv("solicitudes_credito.csv", sep=";")
-    df.dropna(axis = 0, inplace = True)
-    df.drop_duplicates(inplace = True)
-    df=df.drop(['Unnamed: 0'], axis=1)
-    df[["sexo", "tipo_de_emprendimiento","idea_negocio","barrio","línea_credito"]]=df[["sexo", "tipo_de_emprendimiento","idea_negocio","barrio","línea_credito"]].apply(lambda x: x.astype(str).str.lower())
-    df=df.replace(to_replace="(_)|(-)",value=" ",regex=True)    
-    df=df.replace(to_replace="[,$]|(\.00$)",value="",regex=True)
-    df.monto_del_credito = df.monto_del_credito.astype("int")
-    df.comuna_ciudadano = df.comuna_ciudadano.astype("float")
-    df.fecha_de_beneficio = pd.to_datetime(df.fecha_de_beneficio,infer_datetime_format=True,errors='coerce',dayfirst=True)
-    df.fecha_de_beneficio = df.fecha_de_beneficio.dt.strftime("%Y/%m/%d")
-    df.fecha_de_beneficio = pd.to_datetime(df.fecha_de_beneficio)
-    df.drop_duplicates(inplace = True)
+    df = pd.read_csv("solicitudes_credito.csv", sep=";",index_col=0)
+    df.reset_index(inplace=True,drop=True)
+    
+    df['fecha_de_beneficio'] = pd.to_datetime(df['fecha_de_beneficio'],dayfirst=True)
+    
+    df.dropna(axis='index',inplace=True)
+    df.drop_duplicates(inplace=True)
+
+    df['sexo'] = df['sexo'].str.lower().astype(str).str.strip()
+    df['tipo_de_emprendimiento'] = df['tipo_de_emprendimiento'].str.lower().astype(str)
+    df['idea_negocio'] = df['idea_negocio'].str.lower().astype(str)
+    df['barrio'] = df['barrio'].str.lower().astype(str)
+    df['línea_credito'] = df['línea_credito'].str.lower().astype(str)
+     
+    df['idea_negocio'] = df['idea_negocio'].str.replace('_',' ').str.replace('-',' ').str.strip()
+    df['barrio'] = df['barrio'].str.replace('_','-').str.replace('-',' ')
+    df['línea_credito'] = df['línea_credito'].str.replace('_',' ').str.replace('-',' ').str.strip()
+
+    df['monto_del_credito'] = df['monto_del_credito'].str.replace(',','').str.replace('$','',regex=False).str.replace(' ','').str.strip().astype(float)   
+    
+    df.drop_duplicates(inplace=True)
+    df.dropna(axis='index',inplace=True)
+
     return df
